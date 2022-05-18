@@ -26,6 +26,7 @@ QT_BEGIN_NAMESPACE
 class Ui_MainWindow
 {
 public:
+    QAction *action_ip;
     QWidget *centralwidget;
     QTableWidget *tableWidget;
     QWidget *layoutWidget;
@@ -35,13 +36,15 @@ public:
     QPushButton *create_folder;
     QPushButton *delete_file;
     QMenuBar *menubar;
-    QMenu *menu;
+    QMenu *settings;
 
     void setupUi(QMainWindow *MainWindow)
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QString::fromUtf8("MainWindow"));
         MainWindow->resize(800, 600);
+        action_ip = new QAction(MainWindow);
+        action_ip->setObjectName(QString::fromUtf8("action_ip"));
         centralwidget = new QWidget(MainWindow);
         centralwidget->setObjectName(QString::fromUtf8("centralwidget"));
         tableWidget = new QTableWidget(centralwidget);
@@ -77,11 +80,12 @@ public:
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName(QString::fromUtf8("menubar"));
         menubar->setGeometry(QRect(0, 0, 800, 24));
-        menu = new QMenu(menubar);
-        menu->setObjectName(QString::fromUtf8("menu"));
+        settings = new QMenu(menubar);
+        settings->setObjectName(QString::fromUtf8("settings"));
         MainWindow->setMenuBar(menubar);
 
-        menubar->addAction(menu->menuAction());
+        menubar->addAction(settings->menuAction());
+        settings->addAction(action_ip);
 
         retranslateUi(MainWindow);
 
@@ -91,11 +95,12 @@ public:
     void retranslateUi(QMainWindow *MainWindow)
     {
         MainWindow->setWindowTitle(QCoreApplication::translate("MainWindow", "MainWindow", nullptr));
+        action_ip->setText(QCoreApplication::translate("MainWindow", "\320\227\320\260\320\264\320\260\321\202\321\214 ip", nullptr));
         back->setText(QCoreApplication::translate("MainWindow", "\320\235\320\260\320\267\320\260\320\264", nullptr));
         add_file->setText(QCoreApplication::translate("MainWindow", "\320\224\320\276\320\261\320\260\320\262\320\270\321\202\321\214 \321\204\320\260\320\271\320\273", nullptr));
         create_folder->setText(QCoreApplication::translate("MainWindow", "\320\241\320\276\320\267\320\264\320\260\321\202\321\214 \320\277\320\260\320\277\320\272\321\203", nullptr));
         delete_file->setText(QCoreApplication::translate("MainWindow", "\320\243\320\264\320\260\320\273\320\270\321\202\321\214", nullptr));
-        menu->setTitle(QCoreApplication::translate("MainWindow", "\320\234\320\265\320\275\321\216", nullptr));
+        settings->setTitle(QCoreApplication::translate("MainWindow", "\320\235\320\260\321\201\321\202\321\200\320\276\320\271\320\272\320\270", nullptr));
     } // retranslateUi
 
 };

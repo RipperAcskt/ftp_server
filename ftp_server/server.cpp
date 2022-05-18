@@ -1,7 +1,9 @@
 #include "server.h"
 
-Server::Server()
+Server::Server(QString path)
 {
+    dir = path;
+
     for(int i = 0; i < QUEUE_SIZE; i++) indexes.push(9-i);
 
     memset(&channel, 0, sizeof(channel));
@@ -62,7 +64,7 @@ void* Server::new_connection21(void *serv){
 
     Server *server = (Server *)serv;
     User *user = new User(server->indexes.pop());
-    user->set_current_dir("/Users/ripper/Desktop/bsuir/spovm/ForthSemCourseWork/files");
+    user->set_current_dir(server->dir);
 
     int descriptor;
     while(1){
@@ -105,20 +107,20 @@ int Server::menu(User *user){
     }
     if(strstr(buffer[user->get_id()], "FEAT")) {
         answer = "221 211 Extensions supported:\n\tPWD\n\tTYPE\n\tPASV\n\tLIST\n\tMKD\n\tCWD\n\tCDUP\n\tRETR\n\tQUIT\n211 End\n";
-        send(descriptor21, answer.toUtf8().data(), 12, 0);
+        send(descriptor21, answer.toUtf8().data(), answer.length(), 0);
         return 1;
     }
     if(strstr(buffer[user->get_id()], "PWD")) {
         list = user->get_current_dir().split("/");
         answer = "257 /";
-        if(list.length() == 8) answer += "\n";
+        if(list.length() == len_of_path) answer += "\n";
         else {
-            for(int i = 8; i < list.length(); i++)
+            for(int i = len_of_path; i < list.length(); i++)
                 answer += list[i] + "/";
             if(answer[answer.length()-1] == '/') answer.remove(answer.length()-1, answer.length());
             answer += "\n";
         }
-//        qDebug() << answer;
+        qDebug() << answer;
         send(descriptor21, answer.toUtf8().data(), answer.length(), 0);
         return 1;
     }
@@ -127,7 +129,7 @@ int Server::menu(User *user){
         return 1;
     }
     if(strstr(buffer[user->get_id()], "PASV")) {
-        answer = "227 192,168,1,109,0,20\n";
+        answer = "227 " + ip + ",0,20\n";
         send(descriptor21, answer.toUtf8().data(), answer.length(), 0);
         return 1;
     }
@@ -186,7 +188,7 @@ int Server::menu(User *user){
 
         list = user->get_current_dir().split("/");
         answer = "257 /";
-        for(int i = 8; i < list.length(); i++) answer += list[i] + "/";
+        for(int i = len_of_path; i < list.length(); i++) answer += list[i] + "/";
         answer += "\n";
 
         send(descriptor21, answer.toUtf8().data(), answer.length(), 0);
@@ -200,13 +202,15 @@ int Server::menu(User *user){
         path_request.truncate(k);
         path_request.remove("\r");
 
-        QString path = "";
-        if(path_request[0] != '/') path += "/";
+        QString path = "/";
+
         answer = "257 ";
 
-        path += path_request;
+
+        QList path_list = path_request.split("/");
+        path += path_list[path_list.length()-1];
         answer += path;
-        user->set_current_dir(DIR + path);
+        user->set_current_dir(user->get_current_dir() + path);
         answer += "\n";
 
         send(descriptor21, answer.toUtf8().data(), answer.length(), 0);
@@ -214,12 +218,14 @@ int Server::menu(User *user){
         return 1;
     }
     if(strstr(buffer[user->get_id()], "CDUP")) {
-        user->set_current_dir(DIR);
+        user->set_current_dir(dir);
         answer = "250 OK\n";
         send(descriptor21, answer.toUtf8().data(), answer.length(), 0);
         return 1;
     }
     if(strstr(buffer[user->get_id()], "RETR")) {
+        QString current_dir = QDir::currentPath();
+        QString p;
         struct stat statbuf;
 
         int fd;
@@ -239,20 +245,24 @@ int Server::menu(User *user){
 
         QString path = "";
         if(path_request[0] != '/') path_request = "/" + path_request;
-        path += DIR + path_request;
+        path += user->get_current_dir() + path_request;
 
-        fd = open(path.toUtf8().data(), O_RDONLY);
-        if(fd < 0) qDebug() << "Ошибка открытия файла";
 
         for(int i = 0; i < BUFFER_SIZE; i++) buffer[user->get_id()][i] = '\0';
         stat(path.toUtf8().data(), &statbuf);
         strmode(statbuf.st_mode, buffer[user->get_id()]);
-        answer = QString::fromUtf8(buffer[user->get_id()]);
-        if(answer[0] == 'd'){
-            answer = "tar -cvf " + path_request.remove(0,1) + ".tar.gz " + path;
+        p = QString::fromUtf8(buffer[user->get_id()]);
+        if(p[0] == 'd'){
+
+            if(!QDir::setCurrent(user->get_current_dir())) qDebug() << "error";
+            answer = "tar -cvf " + path_request.remove(0,1) + ".tar " + path_request;
             system(answer.toUtf8().data());
-            fd = open((path_request + ".tar").toUtf8().data(), O_RDONLY);
+            fd = open((path + ".tar").toUtf8().data(), O_RDONLY);
+
         }
+        else fd = open(path.toUtf8().data(), O_RDONLY);
+
+        if(fd < 0) qDebug() << "Ошибка открытия файла";
 
         while(1){
             for(int i = 0; i < BUFFER_SIZE; i++) buffer[user->get_id()][i] = '\0';
@@ -265,6 +275,39 @@ int Server::menu(User *user){
         answer = "226 File transfer OK\n";
         send(descriptor21, answer.toUtf8().data(), answer.length(), 0);
         close(descriptor20);
+        if(p[0] == 'd'){
+            system(("rm " + path + ".tar").toUtf8().data());
+            QDir::setCurrent(current_dir);
+        }
+        return 1;
+    }
+    if(strstr(buffer[user->get_id()], "STOR")) {
+        list = QString::fromUtf8(buffer[user->get_id()]).split(" ");
+        QString request = list[1];
+        int k = request.indexOf("\r");
+        request.truncate(k);
+        request.remove("\r");
+        QStringList l = request.split("/");
+
+        int fd = open((user->get_current_dir() + "/" + l[l.length()-1]).toUtf8().data(), O_WRONLY | O_CREAT);
+
+        sa20 = accept(s20, 0, 0);
+        if(sa20 < 0) qDebug() << "ошибка доступа";
+        descriptor20 = sa20;
+
+        answer = "150 Accepted data connection\n";
+        send(descriptor21, answer.toUtf8().data(), answer.length(), 0);
+
+        while(1){
+            for(int i = 0; i < BUFFER_SIZE; i++) buffer[user->get_id()][i] = '\0';
+            int bytes = recv(sa20, buffer[user->get_id()], BUFFER_SIZE, 0);
+            if(bytes <= 0) break;
+            write(fd, buffer, bytes);
+        }
+
+        answer = "226 File getting OK\n";
+        send(descriptor21, answer.toUtf8().data(), answer.length(), 0);
+        close(descriptor20);
 
         return 1;
     }
@@ -274,4 +317,13 @@ int Server::menu(User *user){
         return -1;
     }
     return -1;
+}
+
+void Server::set_ip(QString ip){
+    this->ip = ip;
+    this->ip.replace(".", ",");
+}
+
+void Server::set_length_of_path(int len){
+    len_of_path = len;
 }

@@ -25,7 +25,6 @@ public:
 private:
     std::vector<struct file> all_files;
     int num;
-//    std::vector<QString> all_files;
 };
 
 #endif // DIR_H

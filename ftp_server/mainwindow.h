@@ -8,7 +8,8 @@
 #include <fstream>
 #include <QRadioButton>
 #include <QPushButton>
-#include "make_dir.h"
+#include <QInputDialog>
+#include <QObject>
 #include "server.h"
 
 QT_BEGIN_NAMESPACE
@@ -34,11 +35,12 @@ private slots:
 
     void on_delete_file_clicked();
 
+    void on_action_ip_triggered();
+
 private:
     Ui::MainWindow *ui;
-    Server server;
+    Server *server;
     User *user = new User(0);
-    make_dir *make;
 
 };
 #endif // MAINWINDOW_H

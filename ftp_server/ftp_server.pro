@@ -12,25 +12,27 @@ SOURCES += \
     dir.cpp \
     main.cpp \
     mainwindow.cpp \
-    make_dir.cpp \
     server.cpp \
     user.cpp
 
 HEADERS += \
     dir.h \
     mainwindow.h \
-    make_dir.h \
     server.h \
     user.h
 
 FORMS += \
-    mainwindow.ui \
-    make_dir.ui
+    mainwindow.ui
 
 QMAKE_CXXFLAGS += -std=c++0x -pthread
 LIBS += -pthread
+
+INCLUDEPATH += $$[QT_INSTALL_PREFIX]/src/3rdparty/zlib
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+DISTFILES += \
+    diagramm.qmodel

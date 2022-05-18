@@ -74,13 +74,19 @@
      <height>24</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menu">
+   <widget class="QMenu" name="settings">
     <property name="title">
-     <string>Меню</string>
+     <string>Настройки</string>
     </property>
+    <addaction name="action_ip"/>
    </widget>
-   <addaction name="menu"/>
+   <addaction name="settings"/>
   </widget>
+  <action name="action_ip">
+   <property name="text">
+    <string>Задать ip</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

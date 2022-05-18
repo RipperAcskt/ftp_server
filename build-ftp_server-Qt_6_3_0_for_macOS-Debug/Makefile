@@ -17,7 +17,7 @@ CXX           = /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefau
 DEFINES       = -DQT_QML_DEBUG -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB
 CFLAGS        = -pipe -g $(EXPORT_ARCH_ARGS) -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk -mmacosx-version-min=10.14 -Wall -Wextra -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -stdlib=libc++ -std=c++0x -pthread -g -std=gnu++1z $(EXPORT_ARCH_ARGS) -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk -mmacosx-version-min=10.14 -Wall -Wextra -fPIC $(DEFINES)
-INCPATH       = -I../ftp_server -I. -I/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers -I/Users/ripper/Qt/6.3.0/macos/lib/QtGui.framework/Headers -I/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers -I. -I/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/System/Library/Frameworks/OpenGL.framework/Headers -I/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/System/Library/Frameworks/AGL.framework/Headers -I. -I/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/System/Library/Frameworks/OpenGL.framework/Headers -I/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/System/Library/Frameworks/AGL.framework/Headers -I/Users/ripper/Qt/6.3.0/macos/mkspecs/macx-clang -F/Users/ripper/Qt/6.3.0/macos/lib
+INCPATH       = -I../ftp_server -I. -I/Users/ripper/Qt/6.3.0/macos/src/3rdparty/zlib -I/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers -I/Users/ripper/Qt/6.3.0/macos/lib/QtGui.framework/Headers -I/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers -I. -I/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/System/Library/Frameworks/OpenGL.framework/Headers -I/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/System/Library/Frameworks/AGL.framework/Headers -I. -I/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/System/Library/Frameworks/OpenGL.framework/Headers -I/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/System/Library/Frameworks/AGL.framework/Headers -I/Users/ripper/Qt/6.3.0/macos/mkspecs/macx-clang -F/Users/ripper/Qt/6.3.0/macos/lib
 QMAKE         = /Users/ripper/Qt/6.3.0/macos/bin/qmake
 DEL_FILE      = rm -f
 CHK_DIR_EXISTS= test -d
@@ -55,19 +55,16 @@ OBJECTS_DIR   = ./
 SOURCES       = ../ftp_server/dir.cpp \
 		../ftp_server/main.cpp \
 		../ftp_server/mainwindow.cpp \
-		../ftp_server/make_dir.cpp \
 		../ftp_server/server.cpp \
-		../ftp_server/user.cpp moc_mainwindow.cpp \
-		moc_make_dir.cpp
+		../ftp_server/user.cpp moc_mainwindow.cpp
 OBJECTS       = dir.o \
 		main.o \
 		mainwindow.o \
-		make_dir.o \
 		server.o \
 		user.o \
-		moc_mainwindow.o \
-		moc_make_dir.o
-DIST          = /Users/ripper/Qt/6.3.0/macos/mkspecs/features/spec_pre.prf \
+		moc_mainwindow.o
+DIST          = ../ftp_server/diagramm.qmodel \
+		/Users/ripper/Qt/6.3.0/macos/mkspecs/features/spec_pre.prf \
 		/Users/ripper/Qt/6.3.0/macos/mkspecs/features/device_config.prf \
 		/Users/ripper/Qt/6.3.0/macos/mkspecs/common/unix.conf \
 		/Users/ripper/Qt/6.3.0/macos/mkspecs/common/mac.conf \
@@ -314,12 +311,10 @@ DIST          = /Users/ripper/Qt/6.3.0/macos/mkspecs/features/spec_pre.prf \
 		/Users/ripper/Qt/6.3.0/macos/mkspecs/features/lex.prf \
 		../ftp_server/ftp_server.pro ../ftp_server/dir.h \
 		../ftp_server/mainwindow.h \
-		../ftp_server/make_dir.h \
 		../ftp_server/server.h \
 		../ftp_server/user.h ../ftp_server/dir.cpp \
 		../ftp_server/main.cpp \
 		../ftp_server/mainwindow.cpp \
-		../ftp_server/make_dir.cpp \
 		../ftp_server/server.cpp \
 		../ftp_server/user.cpp
 QMAKE_TARGET  = ftp_server
@@ -342,7 +337,7 @@ include /Users/ripper/Qt/6.3.0/macos/mkspecs/features/mac/sdk.mk
 first: all
 ####### Build rules
 
-ftp_server.app/Contents/MacOS/ftp_server: ui_mainwindow.h ui_make_dir.h $(OBJECTS)  
+ftp_server.app/Contents/MacOS/ftp_server: ui_mainwindow.h $(OBJECTS)  
 	@test -d ftp_server.app/Contents/MacOS/ || mkdir -p ftp_server.app/Contents/MacOS/
 	$(LINK) $(LFLAGS) -o $(TARGET)  $(OBJECTS) $(OBJCOMP) $(LIBS)
 
@@ -874,9 +869,9 @@ dist: distdir FORCE
 distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
-	$(COPY_FILE) --parents ../ftp_server/dir.h ../ftp_server/mainwindow.h ../ftp_server/make_dir.h ../ftp_server/server.h ../ftp_server/user.h $(DISTDIR)/
-	$(COPY_FILE) --parents ../ftp_server/dir.cpp ../ftp_server/main.cpp ../ftp_server/mainwindow.cpp ../ftp_server/make_dir.cpp ../ftp_server/server.cpp ../ftp_server/user.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents ../ftp_server/mainwindow.ui ../ftp_server/make_dir.ui $(DISTDIR)/
+	$(COPY_FILE) --parents ../ftp_server/dir.h ../ftp_server/mainwindow.h ../ftp_server/server.h ../ftp_server/user.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../ftp_server/dir.cpp ../ftp_server/main.cpp ../ftp_server/mainwindow.cpp ../ftp_server/server.cpp ../ftp_server/user.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents ../ftp_server/mainwindow.ui $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -905,9 +900,9 @@ benchmark: first
 
 compiler_rcc_make_all:
 compiler_rcc_clean:
-compiler_moc_header_make_all: moc_mainwindow.cpp moc_make_dir.cpp
+compiler_moc_header_make_all: moc_mainwindow.cpp
 compiler_moc_header_clean:
-	-$(DEL_FILE) moc_mainwindow.cpp moc_make_dir.cpp
+	-$(DEL_FILE) moc_mainwindow.cpp
 moc_mainwindow.cpp: ../ftp_server/mainwindow.h \
 		/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers/QMainWindow \
 		/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers/qmainwindow.h \
@@ -919,47 +914,34 @@ moc_mainwindow.cpp: ../ftp_server/mainwindow.h \
 		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/qdir.h \
 		/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers/QRadioButton \
 		/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers/qradiobutton.h \
-		../ftp_server/make_dir.h \
-		/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers/QDialog \
-		/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers/qdialog.h \
+		/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers/QPushButton \
+		/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers/qpushbutton.h \
+		/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers/QInputDialog \
+		/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers/qinputdialog.h \
+		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/QObject \
+		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/qobject.h \
+		../ftp_server/server.h \
 		../ftp_server/user.h \
 		../ftp_server/dir.h \
 		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/QString \
 		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/qstring.h \
-		../ftp_server/server.h \
 		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/QDebug \
 		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/qdebug.h \
 		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/QStack \
 		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/qstack.h \
 		/Users/ripper/Qt/6.3.0/macos/libexec/moc
-	/Users/ripper/Qt/6.3.0/macos/libexec/moc $(DEFINES) -D__APPLE__ -D__GNUC__=4 -D__APPLE_CC__ -D__cplusplus=199711L -D__APPLE_CC__=6000 -D__clang__ -D__clang_major__=13 -D__clang_minor__=1 -D__clang_patchlevel__=6 -D__GNUC__=4 -D__GNUC_MINOR__=2 -D__GNUC_PATCHLEVEL__=1 -I/Users/ripper/Qt/6.3.0/macos/mkspecs/macx-clang -I/Users/ripper/Desktop/bsuir/spovm/ForthSemCourseWork/ftp_server -I/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers -I/Users/ripper/Qt/6.3.0/macos/lib/QtGui.framework/Headers -I/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers -I. -I/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/usr/include/c++/v1 -I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/13.1.6/include -I/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/usr/include -I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -F/Users/ripper/Qt/6.3.0/macos/lib ../ftp_server/mainwindow.h -o moc_mainwindow.cpp
-
-moc_make_dir.cpp: ../ftp_server/make_dir.h \
-		/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers/QDialog \
-		/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers/qdialog.h \
-		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/QDir \
-		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/qdir.h \
-		../ftp_server/user.h \
-		../ftp_server/dir.h \
-		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/QString \
-		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/qstring.h \
-		/Users/ripper/Qt/6.3.0/macos/libexec/moc
-	/Users/ripper/Qt/6.3.0/macos/libexec/moc $(DEFINES) -D__APPLE__ -D__GNUC__=4 -D__APPLE_CC__ -D__cplusplus=199711L -D__APPLE_CC__=6000 -D__clang__ -D__clang_major__=13 -D__clang_minor__=1 -D__clang_patchlevel__=6 -D__GNUC__=4 -D__GNUC_MINOR__=2 -D__GNUC_PATCHLEVEL__=1 -I/Users/ripper/Qt/6.3.0/macos/mkspecs/macx-clang -I/Users/ripper/Desktop/bsuir/spovm/ForthSemCourseWork/ftp_server -I/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers -I/Users/ripper/Qt/6.3.0/macos/lib/QtGui.framework/Headers -I/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers -I. -I/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/usr/include/c++/v1 -I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/13.1.6/include -I/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/usr/include -I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -F/Users/ripper/Qt/6.3.0/macos/lib ../ftp_server/make_dir.h -o moc_make_dir.cpp
+	/Users/ripper/Qt/6.3.0/macos/libexec/moc $(DEFINES) -D__APPLE__ -D__GNUC__=4 -D__APPLE_CC__ -D__cplusplus=199711L -D__APPLE_CC__=6000 -D__clang__ -D__clang_major__=13 -D__clang_minor__=1 -D__clang_patchlevel__=6 -D__GNUC__=4 -D__GNUC_MINOR__=2 -D__GNUC_PATCHLEVEL__=1 -I/Users/ripper/Qt/6.3.0/macos/mkspecs/macx-clang -I/Users/ripper/Desktop/bsuir/spovm/ForthSemCourseWork/ftp_server -I/Users/ripper/Qt/6.3.0/macos/src/3rdparty/zlib -I/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers -I/Users/ripper/Qt/6.3.0/macos/lib/QtGui.framework/Headers -I/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers -I. -I/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/usr/include/c++/v1 -I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/13.1.6/include -I/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/usr/include -I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -F/Users/ripper/Qt/6.3.0/macos/lib ../ftp_server/mainwindow.h -o moc_mainwindow.cpp
 
 compiler_moc_objc_header_make_all:
 compiler_moc_objc_header_clean:
 compiler_moc_source_make_all:
 compiler_moc_source_clean:
-compiler_uic_make_all: ui_mainwindow.h ui_make_dir.h
+compiler_uic_make_all: ui_mainwindow.h
 compiler_uic_clean:
-	-$(DEL_FILE) ui_mainwindow.h ui_make_dir.h
+	-$(DEL_FILE) ui_mainwindow.h
 ui_mainwindow.h: ../ftp_server/mainwindow.ui \
 		/Users/ripper/Qt/6.3.0/macos/libexec/uic
 	/Users/ripper/Qt/6.3.0/macos/libexec/uic ../ftp_server/mainwindow.ui -o ui_mainwindow.h
-
-ui_make_dir.h: ../ftp_server/make_dir.ui \
-		/Users/ripper/Qt/6.3.0/macos/libexec/uic
-	/Users/ripper/Qt/6.3.0/macos/libexec/uic ../ftp_server/make_dir.ui -o ui_make_dir.h
 
 compiler_rez_source_make_all:
 compiler_rez_source_clean:
@@ -989,14 +971,17 @@ main.o: ../ftp_server/main.cpp ../ftp_server/mainwindow.h \
 		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/qdir.h \
 		/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers/QRadioButton \
 		/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers/qradiobutton.h \
-		../ftp_server/make_dir.h \
-		/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers/QDialog \
-		/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers/qdialog.h \
+		/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers/QPushButton \
+		/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers/qpushbutton.h \
+		/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers/QInputDialog \
+		/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers/qinputdialog.h \
+		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/QObject \
+		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/qobject.h \
+		../ftp_server/server.h \
 		../ftp_server/user.h \
 		../ftp_server/dir.h \
 		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/QString \
 		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/qstring.h \
-		../ftp_server/server.h \
 		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/QDebug \
 		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/qdebug.h \
 		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/QStack \
@@ -1016,32 +1001,23 @@ mainwindow.o: ../ftp_server/mainwindow.cpp ../ftp_server/mainwindow.h \
 		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/qdir.h \
 		/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers/QRadioButton \
 		/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers/qradiobutton.h \
-		../ftp_server/make_dir.h \
-		/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers/QDialog \
-		/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers/qdialog.h \
+		/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers/QPushButton \
+		/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers/qpushbutton.h \
+		/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers/QInputDialog \
+		/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers/qinputdialog.h \
+		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/QObject \
+		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/qobject.h \
+		../ftp_server/server.h \
 		../ftp_server/user.h \
 		../ftp_server/dir.h \
 		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/QString \
 		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/qstring.h \
-		../ftp_server/server.h \
 		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/QDebug \
 		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/qdebug.h \
 		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/QStack \
 		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/qstack.h \
 		ui_mainwindow.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o mainwindow.o ../ftp_server/mainwindow.cpp
-
-make_dir.o: ../ftp_server/make_dir.cpp ../ftp_server/make_dir.h \
-		/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers/QDialog \
-		/Users/ripper/Qt/6.3.0/macos/lib/QtWidgets.framework/Headers/qdialog.h \
-		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/QDir \
-		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/qdir.h \
-		../ftp_server/user.h \
-		../ftp_server/dir.h \
-		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/QString \
-		/Users/ripper/Qt/6.3.0/macos/lib/QtCore.framework/Headers/qstring.h \
-		ui_make_dir.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o make_dir.o ../ftp_server/make_dir.cpp
 
 server.o: ../ftp_server/server.cpp ../ftp_server/server.h \
 		../ftp_server/user.h \
@@ -1064,9 +1040,6 @@ user.o: ../ftp_server/user.cpp ../ftp_server/user.h \
 
 moc_mainwindow.o: moc_mainwindow.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_mainwindow.o moc_mainwindow.cpp
-
-moc_make_dir.o: moc_make_dir.cpp 
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_make_dir.o moc_make_dir.cpp
 
 ####### Install
 

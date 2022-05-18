@@ -7,12 +7,15 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    make = new make_dir();
+    if(!QDir("files").exists()) QDir().mkdir("files");
 
-    user->set_current_dir("/Users/ripper/Desktop/bsuir/spovm/ForthSemCourseWork/files");
+    QString path = QDir::currentPath() + "/" + "files";
+
+    server = new Server(path);
+    server->set_length_of_path(path.split("/").length());
+    user->set_current_dir(QDir::currentPath() + "/" + "files");
+    qDebug() << QDir::currentPath();
     showAll();
-
-    connect(make, &make_dir::mainWindow, this, &MainWindow::showAll);
 }
 
 MainWindow::~MainWindow()
@@ -26,7 +29,7 @@ void MainWindow::on_add_file_clicked()
 
     QStringList files = QFileDialog::getOpenFileNames(0, "Выберите файлы", QDir::homePath(), "");
     QStringList file_name;
-    QString path = "/Users/ripper/Desktop/bsuir/spovm/ForthSemCourseWork/files/";
+    QString path = user->get_current_dir()+"/";
     std::string line;
 
     for(int i = 0; i < files.length(); i++){
@@ -46,7 +49,7 @@ void MainWindow::showAll(){
     char buffer[1024];
 
 
-    if(user->get_current_dir() == "/Users/ripper/Desktop/bsuir/spovm/ForthSemCourseWork/files") ui->back->hide();
+    if(user->get_current_dir() == (QDir::currentPath() + "/" + "files")) ui->back->hide();
     else ui->back->show();
 
     ui->tableWidget->setColumnCount(5);
@@ -95,8 +98,11 @@ void MainWindow::showAll(){
 
 void MainWindow::on_create_folder_clicked()
 {
-    make->set_user(user);
-    make->show();
+    bool ok;
+    QString name = QInputDialog().getText(0, "Создать папку", "Имя:", QLineEdit::Normal, "", &ok);
+    if(!ok) return;
+    QDir().mkdir(user->get_current_dir()+"/"+name);
+    showAll();
 }
 
 void MainWindow::clicked_button(){
@@ -139,6 +145,16 @@ void MainWindow::on_delete_file_clicked()
     user->get_all_files()->set_empty();
     ui->tableWidget->setRowCount(0);
     showAll();
+
+}
+
+
+void MainWindow::on_action_ip_triggered()
+{
+    bool ok;
+    QString ip = QInputDialog().getText(0, "Задать IP", "IP:", QLineEdit::Normal, "", &ok);
+    if(!ok) return;
+    server->set_ip(ip);
 
 }
 
