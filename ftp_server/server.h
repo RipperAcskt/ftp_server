@@ -20,7 +20,7 @@
 #define SERVER_PORT20 20
 #define SERVER_PORT21 21
 #define QUEUE_SIZE 10
-#define BUFFER_SIZE 4096
+#define BUFFER_SIZE 500
 
 
 class Server

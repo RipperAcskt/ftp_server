@@ -86,6 +86,7 @@ void* Server::new_connection21(void *serv){
         if(!server->menu(user)) break;
 
     }
+    qDebug() << "exit";
     close(server->sa21[user->get_id()]);
     server->indexes.push(user->get_id());
     return(0);
@@ -97,7 +98,7 @@ int Server::menu(User *user){
 //    pthread_mutex_lock(&mutex);
     int descriptor20, descriptor21 = sa21[user->get_id()];
 
-    if(strstr(buffer[user->get_id()], "USER anonymous")){
+    if(strstr(buffer[user->get_id()], "USER")){
         send(descriptor21, "230 Ok\n", 7, 0);
         return 1;
     }
@@ -106,7 +107,7 @@ int Server::menu(User *user){
         return 1;
     }
     if(strstr(buffer[user->get_id()], "FEAT")) {
-        answer = "221 211 Extensions supported:\n\tPWD\n\tTYPE\n\tPASV\n\tLIST\n\tMKD\n\tCWD\n\tCDUP\n\tRETR\n\tQUIT\n211 End\n";
+        answer = "211 Extensions supported:\n\tPWD\n\tTYPE\n\tPASV\n\tLIST\n\tMKD\n\tCWD\n\tCDUP\n\tRETR\n\tQUIT\n211 End\n";
         send(descriptor21, answer.toUtf8().data(), answer.length(), 0);
         return 1;
     }
@@ -139,11 +140,15 @@ int Server::menu(User *user){
         descriptor20 = sa20;
 
         struct stat statbuf;
+        qDebug() << user->get_current_dir();
         user->get_all_files()->current_dir(user->get_current_dir().toUtf8().data());
 
         answer = "150 Accepted data connection\n";
         send(descriptor21, answer.toUtf8().data(), answer.length(), 0);
 
+        while(!semctl(sem, 0, GETVAL));
+
+        semctl(sem, 0, SETVAL, 0);
         for(int i = 0; i < user->get_all_files()->get_num(); i++){
             stat(user->get_all_files()->get_all_files()[i].name.toUtf8().data(), &statbuf);
 
@@ -173,11 +178,11 @@ int Server::menu(User *user){
 //            qDebug() << answer;
 
         }
-        answer = "226 5 matches total\n";
+        answer = "226 " + QString::number(user->get_all_files()->get_num()) + " matches total\n";
         send(descriptor21, answer.toUtf8().data(), answer.length(), 0);
         close(descriptor20);
         user->get_all_files()->set_empty();
-
+        semctl(sem, 0, SETVAL, 1);
         return 1;
     }
 
@@ -196,51 +201,78 @@ int Server::menu(User *user){
     }
 
     if(strstr(buffer[user->get_id()], "CWD")) {
+        while(!semctl(sem, 0, GETVAL));
+
+        semctl(sem, 0, SETVAL, 0);
+
         list = QString::fromUtf8(buffer[user->get_id()]).split(" ");
         QString path_request = list[1];
         int k = path_request.indexOf("\r");
         path_request.truncate(k);
         path_request.remove("\r");
+//        qDebug() << path_request;
+        if(path_request == ".."){
+            strcpy(buffer[user->get_id()], "CDUP");
+            menu(user);
+            semctl(sem, 0, SETVAL, 1);
+            return 1;
+        }
+        else{
+            if(QDir(user->get_current_dir() + "/" + path_request).exists()){
+                QString path = "/";
 
-        QString path = "/";
+                answer = "257 ";
 
-        answer = "257 ";
+                QList path_list = path_request.split("/");
+                path += path_list[path_list.length()-1];
+                answer += path;
+                user->set_current_dir(user->get_current_dir() + path);
+                answer += "\n";
+            }
+            else{
+                answer = "550 Requested action not taken\n";
+            }
 
-
-        QList path_list = path_request.split("/");
-        path += path_list[path_list.length()-1];
-        answer += path;
-        user->set_current_dir(user->get_current_dir() + path);
-        answer += "\n";
-
+        }
         send(descriptor21, answer.toUtf8().data(), answer.length(), 0);
-//        qDebug() << answer;
+        semctl(sem, 0, SETVAL, 1);
         return 1;
     }
     if(strstr(buffer[user->get_id()], "CDUP")) {
-        user->set_current_dir(dir);
-        answer = "250 OK\n";
+
+        QStringList path = user->get_current_dir().split("/");
+        QString newPath = "";
+
+        for(int i = 0; i < path.length()-1; i++) newPath += path[i] + "/";
+        qDebug() << newPath;
+        if(newPath[newPath.length()-1] == '/')newPath.remove(newPath.length()-1, newPath.length());
+        if(user->get_current_dir() == QDir::currentPath()+"/files") {
+            answer = "550 Requested action not taken\n";
+        }
+        else{
+//            qDebug() << newPath;
+            user->set_current_dir(newPath);
+            answer = "250 OK\n";
+        }
+
         send(descriptor21, answer.toUtf8().data(), answer.length(), 0);
         return 1;
     }
     if(strstr(buffer[user->get_id()], "RETR")) {
+        while(!semctl(sem, 0, GETVAL));
+
+        semctl(sem, 0, SETVAL, 0);
+
         QString current_dir = QDir::currentPath();
         QString p;
         struct stat statbuf;
 
-        int fd;
+        FILE *fd;
         list = QString::fromUtf8(buffer[user->get_id()]).split(" ");
         QString path_request = list[1];
         int k = path_request.indexOf("\r");
         path_request.truncate(k);
         path_request.remove("\r");
-
-        sa20 = accept(s20, 0, 0);
-        if(sa20 < 0) qDebug() << "ошибка доступа";
-        descriptor20 = sa20;
-
-        answer = "150 Accepted data connection\n";
-        send(descriptor21, answer.toUtf8().data(), answer.length(), 0);
 
 
         QString path = "";
@@ -257,28 +289,43 @@ int Server::menu(User *user){
             if(!QDir::setCurrent(user->get_current_dir())) qDebug() << "error";
             answer = "tar -cvf " + path_request.remove(0,1) + ".tar " + path_request;
             system(answer.toUtf8().data());
-            fd = open((path + ".tar").toUtf8().data(), O_RDONLY);
+            fd = fopen((path + ".tar").toUtf8().data(), "rb");
 
         }
-        else fd = open(path.toUtf8().data(), O_RDONLY);
+        else fd = fopen(path.toUtf8().data(), "rb");
 
-        if(fd < 0) qDebug() << "Ошибка открытия файла";
+        sa20 = accept(s20, 0, 0);
+        if(sa20 < 0) qDebug() << "ошибка доступа";
+        descriptor20 = sa20;
 
-        while(1){
-            for(int i = 0; i < BUFFER_SIZE; i++) buffer[user->get_id()][i] = '\0';
+        if(fd == NULL){
+             answer = "450 No such file or directory.\n";
+        }
+        else{
 
-            int bytes = read(fd, buffer[user->get_id()], BUFFER_SIZE);
-            if(bytes <= 0) break;
-            send(sa20, buffer[user->get_id()], BUFFER_SIZE, 0);
+            answer = "150 Accepted data connection\n";
+            send(descriptor21, answer.toUtf8().data(), answer.length(), 0);
+
+            while(1){
+                for(int i = 0; i < BUFFER_SIZE; i++) buffer[user->get_id()][i] = '\0';
+
+                int bytes = fread(buffer[user->get_id()], 1, BUFFER_SIZE, fd);
+                if(bytes <= 0) break;
+                send(sa20, buffer[user->get_id()], bytes, 0);
+            }
+
+            if(p[0] == 'd'){
+                system(("rm " + path + ".tar").toUtf8().data());
+                QDir::setCurrent(current_dir);
+            }
+            fclose(fd);
+            answer = "226 File transfer OK\n";
+
         }
 
-        answer = "226 File transfer OK\n";
         send(descriptor21, answer.toUtf8().data(), answer.length(), 0);
         close(descriptor20);
-        if(p[0] == 'd'){
-            system(("rm " + path + ".tar").toUtf8().data());
-            QDir::setCurrent(current_dir);
-        }
+        semctl(sem, 0, SETVAL, 1);
         return 1;
     }
     if(strstr(buffer[user->get_id()], "STOR")) {
@@ -289,7 +336,8 @@ int Server::menu(User *user){
         request.remove("\r");
         QStringList l = request.split("/");
 
-        int fd = open((user->get_current_dir() + "/" + l[l.length()-1]).toUtf8().data(), O_WRONLY | O_CREAT);
+        FILE *fd;
+        fd = fopen((user->get_current_dir() + "/" + l[l.length()-1]).toUtf8().data(), "wb");
 
         sa20 = accept(s20, 0, 0);
         if(sa20 < 0) qDebug() << "ошибка доступа";
@@ -302,7 +350,7 @@ int Server::menu(User *user){
             for(int i = 0; i < BUFFER_SIZE; i++) buffer[user->get_id()][i] = '\0';
             int bytes = recv(sa20, buffer[user->get_id()], BUFFER_SIZE, 0);
             if(bytes <= 0) break;
-            write(fd, buffer, bytes);
+            fwrite(buffer, bytes, 1, fd);
         }
 
         answer = "226 File getting OK\n";
@@ -316,7 +364,9 @@ int Server::menu(User *user){
         send(descriptor21, answer.toUtf8().data(), answer.length(), 0);
         return -1;
     }
-    return -1;
+    answer = "502 Command not implemented.\n";
+    send(descriptor21, answer.toUtf8().data(), answer.length(), 0);
+    return 1;
 }
 
 void Server::set_ip(QString ip){

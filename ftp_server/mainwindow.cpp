@@ -13,7 +13,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     server = new Server(path);
     server->set_length_of_path(path.split("/").length());
-    user->set_current_dir(QDir::currentPath() + "/" + "files");
+    user->set_current_dir(path);
     qDebug() << QDir::currentPath();
     showAll();
 }
